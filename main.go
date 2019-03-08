@@ -48,7 +48,7 @@ type Partner struct {
 func init() {
 
 	connStr := "host=localhost port=5432 user=postgres password=FR4uT dbname=voucher_db sslmode=disable"
-	db, err := sql.Open("postgres", connStr)
+	db, err = sql.Open("postgres", connStr)
 
 	if err != nil {
 		log.Fatal(err)
@@ -177,5 +177,3 @@ func getAllVouchers(c echo.Context) error {
 
 	}
 */
-
-//DB methods were called with a nil receiver.
