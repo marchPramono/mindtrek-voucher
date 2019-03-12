@@ -86,21 +86,11 @@ func addVoucher(c echo.Context) error {
 		return err
 	}
 
-	/*
-		sqlStatement := `INSERT INTO mind_voucher(product_id, nominal, duration_month)
-		VALUES($1, $2, $3)`
-	*/
-
-	/*
-		sqlStatement := `INSERT INTO mind_voucher(product_id, voucher_code, nominal, duration_month, expired_at)
-		VALUES(1, random_string(8), 100000 , 6, now() + '1 month'::interval * 120)
-		RETURNING voucher_code`
-	*/
-
 	sqlStatement := `INSERT INTO mind_voucher(product_id, voucher_code, nominal, duration_month, expired_at)
-	VALUES($1, $2, $3, $4, $5) RETURNING voucher_code`
+		VALUES($1, random_string(8), $2 , $3, now() + '1 month'::interval * 120)
+		RETURNING voucher_code`
 
-	res, err := db.Query(sqlStatement, u.ProductID, u.VoucherCode, u.Nominal, u.DurationMonth, u.ExpiredAt)
+	res, err := db.Query(sqlStatement, u.ProductID, u.Nominal, u.DurationMonth)
 	if err != nil {
 		fmt.Println(err)
 	} else {
