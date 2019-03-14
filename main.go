@@ -231,8 +231,16 @@ func addInvoiceItem(c echo.Context) error {
 		return err
 	}
 
+	item := ItemAmount{}
+	if err := c.Bind(u); err != nil {
+		return err
+	}
+
 	for i := 0; i < u.ItemAmount; i++ {
-		return u.ItemID
+		if i == 0 {
+			return err
+		}
+		return (u.ItemID)
 	}
 
 	sqlStatement := `INSERT INTO mind_invoice_item(item_id, item_amount, item_price, item_discount)
@@ -253,20 +261,20 @@ func getAllVouchers(c echo.Context) error {
 	FROM mind_partner_voucher ORDER BY invoice_id`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
-	fmt.Println(err)
+		fmt.Println(err)
 	}
 	defer rows.Close()
-	result := Vouchers{}
+	result := PartnerVouchers{}
 
-			for rows.next() {
-				voucher := Vouchers{}
-				err2 := rows.Scan(&voucher.InvoiceID, &voucher.PartnerID, &voucher.VoucherCode, &voucher.PurchaseValue)
-				if err2 != nil {
-					return err2
-				}
-				result.Vouchers = append(result.Vouchers, voucher)
-			}
-			result c.JSON(http.StatusCreated, result)
+	for rows.Next() {
 
+		voucher := PartnerVoucher{}
+
+		err2 := rows.Scan(&voucher.InvoiceID, &voucher.PartnerID, &voucher.VoucherCode, &voucher.PurchaseValue)
+		if err2 != nil {
+			return err2
+		}
+		result.PartnerVouchers = append(result.PartnerVouchers, voucher)
 	}
-
+	return c.JSON(http.StatusAccepted, result)
+}
