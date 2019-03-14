@@ -16,7 +16,7 @@ var (
 	err error
 )
 
-// Voucher for mind_voucher
+// Voucher for mind_voucher table
 type Voucher struct {
 	VoucherCode   string `json:"voucher_code"`
 	ProductID     string `json:"product_id"`
@@ -27,7 +27,12 @@ type Voucher struct {
 	ActivatedAt   string `json:"activated_at"`
 }
 
-// Product for mind_product
+// Vouchers struct
+type Vouchers struct {
+	Vouchers []Voucher `json:"vouchers"`
+}
+
+// Product for mind_product table
 type Product struct {
 	ProductID          string `json:"product_id"`
 	ProductName        string `json:"product_name"`
@@ -36,13 +41,73 @@ type Product struct {
 	UpdatedAt          string `json:"updated_at"`
 }
 
-// Partner for mind_partner
+// Products struct
+type Products struct {
+	Products []Product `json:"products"`
+}
+
+// Partner for mind_partner table
 type Partner struct {
 	PartnerID   string `json:"partner_id"`
 	PartnerName string `json:"partner_name"`
 	City        string `json:"city"`
 	CreatedAt   string `json:"created_at"`
 	UpdatedAt   string `json:"updated_at"`
+}
+
+// Partners struct
+type Partners struct {
+	Partners []Partner `jason:"partners"`
+}
+
+// Invoice for mind_invoice table
+type Invoice struct {
+	InvoiceID       string `json:"invoice_id"`
+	PartnerID       string `json:"partner_id"`
+	PaymentMethodID string `json:"paymentmethod_id"`
+	CreatedAt       string `json:"created_at"`
+}
+
+// Invoices struct
+type Invoices struct {
+	Invoices []Invoice `json:"invoices"`
+}
+
+// PartnerVoucher for mind_partner_voucher table
+type PartnerVoucher struct {
+	InvoiceID     string `json:"invoice_id"`
+	PartnerID     string `json:"partner_id"`
+	VoucherCode   string `json:"voucher_code"`
+	PurchaseValue string `json:"purchase_value"`
+}
+
+// Generate Vouchers for partner purchase
+type PartnerVouchers struct {
+	PartnerVouchers []PartnerVoucher `json:"partner_vouchers"`
+}
+
+// InvoiceItem for invoice_item table
+type InvoiceItem struct {
+	InvoiceItemID string `json:"invoice_item_id"`
+	ItemID        string `json:"item_id"`
+	ItemAmount    int    `json:"item_amount"`
+	ItemPrice     string `json:"item_price"`
+	ItemDiscount  string `json:"item_discount"`
+}
+
+// Generate Invoices per Item
+type InvoiceItems struct {
+	InvoiceItems []InvoiceItem `json:"invoice_items"`
+}
+
+// InvoiceItemRelationship for invoice_item_relationship table
+type InvoiceItemRelationship struct {
+	InvoiceID     string `json:"invoice_id"`
+	InvoiceItemID string `json:"invoice_item_id"`
+}
+
+type InvoiceItemRelationships struct {
+	InvoiceItemRelationships []InvoiceItemRelationship `json:"invoice_item_relationship"`
 }
 
 func init() {
@@ -73,8 +138,9 @@ func main() {
 	e.POST("/mind_voucher", addVoucher)
 	e.POST("/mind_product", addProduct)
 	e.POST("/mind_partner", addPartner)
-	//e.GET("/mind_voucher/:id", getVoucher)
-	//e.GET("/mind_voucher", getAllVouchers)
+	e.POST("/mind_invoice_item", addInvoiceItem)
+	e.GET("/mind_voucher/:code", getVoucher)
+	e.GET("/mind_voucher", getAllVouchers)
 
 	e.Logger.Fatal(e.Start(":2005"))
 }
@@ -98,6 +164,24 @@ func addVoucher(c echo.Context) error {
 		return c.JSON(http.StatusCreated, u)
 	}
 	return c.String(http.StatusOK, "ok")
+
+}
+
+func getVoucher(c echo.Context) error {
+
+	voucher := Voucher{}
+	id := c.Param("voucher_code")
+
+	sqlStatement := `SELECT FROM mind_voucher WHERE voucher_code=$1`
+
+	res, err := db.Query(sqlStatement, voucher)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(res)
+		return c.JSON(http.StatusOK, "Selected")
+	}
+	return c.String(http.StatusOK, id+"Selected")
 }
 
 func addProduct(c echo.Context) error {
@@ -140,27 +224,33 @@ func addPartner(c echo.Context) error {
 	return c.String(http.StatusOK, "ok")
 }
 
-/*
-func getVoucher(c echo.Context) error {
+func addInvoiceItem(c echo.Context) error {
 
-	id := c.Param("id")
+	u := new(InvoiceItem)
+	if err := c.Bind(u); err != nil {
+		return err
+	}
 
-	sqlStatement := `SELECT FROM mind_voucher WHERE id=$1`
+	for i := 0; i < u.ItemAmount; i++ {
+		return u.ItemID
+	}
 
-	res, err := db.Query(sqlStatement, id)
+	sqlStatement := `INSERT INTO mind_invoice_item(item_id, item_amount, item_price, item_discount)
+	VALUES($1, $2, $3, #4)`
+
+	res, err := db.Query(sqlStatement, u.ItemID, u.ItemAmount, u.ItemPrice, u.ItemDiscount)
 	if err != nil {
 		fmt.Println(err)
 	} else {
 		fmt.Println(res)
-		return c.JSON(http.StatusOK, "Selected")
+		return c.JSON(http.StatusCreated, u)
 	}
-	return c.String(http.StatusOK, id+"Selected")
+	return c.String(http.StatusOK, "ok")
 }
-*/
 
-/*
 func getAllVouchers(c echo.Context) error {
-	sqlStatement := ``
+	sqlStatement := `SELECT invoice_id, voucher_code, partner_id, purchase_value 
+	FROM mind_partner_voucher ORDER BY invoice_id`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
 	fmt.Println(err)
@@ -170,7 +260,7 @@ func getAllVouchers(c echo.Context) error {
 
 			for rows.next() {
 				voucher := Vouchers{}
-				err 2 := rows.Scan()
+				err2 := rows.Scan(&voucher.InvoiceID, &voucher.PartnerID, &voucher.VoucherCode, &voucher.PurchaseValue)
 				if err2 != nil {
 					return err2
 				}
@@ -179,4 +269,4 @@ func getAllVouchers(c echo.Context) error {
 			result c.JSON(http.StatusCreated, result)
 
 	}
-*/
+
